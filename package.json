@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/clerk-sdk-node": "^4.13.23",
     "@clerk/nextjs": "^6.14.2",
     "@cometchat-pro/chat": "^3.0.13",
     "@cometchat/chat-uikit-react": "^6.0.6",

@@ -9,12 +9,12 @@ import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 
 import CreatorProfileModal from "@/components/CreatorProfileModal";
+import ChatComponent from "@/components/ChatComponent";
 
 export default function ApplicationsPage() {
   const { id: campaignId } = useParams();
@@ -22,7 +22,11 @@ export default function ApplicationsPage() {
 
   const [campaign, setCampaign] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
-  const [open, setOpen] = useState(false);
+  const [openProfile, setOpenProfile] = useState(false);
+
+  // Chat Modal State
+  const [openChat, setOpenChat] = useState(false);
+  const [chatWith, setChatWith] = useState(null); // creatorId
 
   const fetchCampaign = async () => {
     try {
@@ -46,7 +50,12 @@ export default function ApplicationsPage() {
 
   const openProfileModal = (profile) => {
     setSelectedProfile(profile);
-    setOpen(true);
+    setOpenProfile(true);
+  };
+
+  const openChatModal = (creatorId) => {
+    setChatWith(creatorId);
+    setOpenChat(true);
   };
 
   useEffect(() => {
@@ -72,13 +81,19 @@ export default function ApplicationsPage() {
       ) : (
         <div className="space-y-4">
           {campaign.applications.map((app) => (
-            <Card key={app._id} className="px-10 py-5 shadow-sm border rounded-lg">
-              <div className="flex justify-between gap-3 items-center">
+            <Card
+              key={app._id}
+              className="px-6 py-4 shadow border rounded-lg"
+            >
+              <div className="flex justify-between flex-wrap gap-4 items-center">
                 <div>
-                  <p className="font-medium">Creator ID: {app.creatorId}</p>
-                  <p className="text-sm text-gray-500">Status: {app.status}</p>
+                  <p className="font-semibold">Creator ID: {app.creatorId}</p>
+                  <p className="text-sm text-gray-500 capitalize">
+                    Status: {app.status}
+                  </p>
                 </div>
-                <div className="flex gap-2">
+
+                <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     variant="outline"
@@ -86,20 +101,36 @@ export default function ApplicationsPage() {
                   >
                     View Profile
                   </Button>
+
                   <Button
                     size="sm"
                     variant={app.status === "accepted" ? "default" : "outline"}
-                    onClick={() => handleApplicationStatus(app.creatorId, "accepted")}
+                    onClick={() =>
+                      handleApplicationStatus(app.creatorId, "accepted")
+                    }
                   >
                     Accept
                   </Button>
+
                   <Button
                     size="sm"
                     variant={app.status === "rejected" ? "default" : "outline"}
-                    onClick={() => handleApplicationStatus(app.creatorId, "rejected")}
+                    onClick={() =>
+                      handleApplicationStatus(app.creatorId, "rejected")
+                    }
                   >
                     Reject
                   </Button>
+
+                  {app.status === "accepted" && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => openChatModal(app.creatorId)}
+                    >
+                      💬 Message
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
@@ -107,13 +138,24 @@ export default function ApplicationsPage() {
         </div>
       )}
 
-      {/* Modal for Creator Profile */}
+      {/* Modal: Creator Profile */}
       <CreatorProfileModal
-        open={open}
-        setOpen={setOpen}
+        open={openProfile}
+        setOpen={setOpenProfile}
         profile={selectedProfile}
       />
-     
+
+      {/* Modal: Chat */}
+      <Dialog open={openChat} onOpenChange={setOpenChat}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Chat with Creator</DialogTitle>
+          </DialogHeader>
+          {chatWith && (
+            <ChatComponent receiverId={chatWith} campaignId={campaignId} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

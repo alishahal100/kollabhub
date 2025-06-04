@@ -6,6 +6,7 @@ import {
   Megaphone,
   Settings,
   Users,
+  MessageCircle,
 } from "lucide-react"
 
 import { UserButton, useUser } from "@clerk/nextjs"
@@ -49,6 +50,11 @@ export function AppSidebar() {
       icon: Megaphone,
     },
     {
+      title: "Messages",
+      url: "/user-dashboard/Messages",
+      icon: MessageCircle,
+    },
+    {
       title: "Settings",
       url: "/user-dashboard/settings",
       icon: Settings,
@@ -70,6 +76,11 @@ export function AppSidebar() {
       title: "Post a campaign",
       url: "/brand-dashboard/campaign",
       icon: Megaphone,
+    },
+    {
+      title: "Messages",
+      url: "/brand-dashboard/Messages",
+      icon: MessageCircle,
     },
     {
       title: "Settings",
