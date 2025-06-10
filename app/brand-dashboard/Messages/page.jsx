@@ -1,19 +1,19 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { useUser, useAuth } from "@clerk/nextjs";
+import { useEffect, useState,useRef } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useAPI } from "@/lib/api";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ChatComponent from "@/components/ChatComponent";
-import { useAPI } from "@/lib/api";
+import { connectSocket } from "@/lib/socket";
 
 export default function MessagesPage() {
   const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
   const { getConversations } = useAPI();
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const socketRef = useRef(null);
 
   const fetchConversations = async () => {
     if (!isLoaded || !user?.id) return;
@@ -22,7 +22,6 @@ export default function MessagesPage() {
     try {
       const data = await getConversations(user.id);
 
-      // Fetch user details from Clerk
       const userDetails = await Promise.all(
         data.map(async (conv) => {
           try {
@@ -50,9 +49,16 @@ export default function MessagesPage() {
   };
 
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && user?.id) {
       fetchConversations();
+      socketRef.current = connectSocket(user.id);
     }
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
   }, [user?.id, isLoaded]);
 
   const openChat = (conversation) => {

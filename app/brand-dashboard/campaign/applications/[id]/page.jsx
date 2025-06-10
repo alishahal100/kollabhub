@@ -26,7 +26,10 @@ export default function ApplicationsPage() {
 
   // Chat Modal State
   const [openChat, setOpenChat] = useState(false);
-  const [chatWith, setChatWith] = useState(null); // creatorId
+  const [chatWith, setChatWith] = useState(null);
+
+  // Store creator names
+  const [creatorNames, setCreatorNames] = useState({});
 
   const fetchCampaign = async () => {
     try {
@@ -58,9 +61,35 @@ export default function ApplicationsPage() {
     setOpenChat(true);
   };
 
+  // Fetch creator name from API
+  const fetchCreatorName = async (creatorId) => {
+    if (creatorNames[creatorId]) return; // already fetched
+
+    try {
+      const res = await fetch(`/api/user-details?userId=${creatorId}`);
+      const data = await res.json();
+
+      if (res.ok) {
+        setCreatorNames((prev) => ({
+          ...prev,
+          [creatorId]: `${data.firstName} ${data.lastName}`,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching creator name:", error);
+    }
+  };
+
   useEffect(() => {
     fetchCampaign();
   }, [campaignId]);
+
+  useEffect(() => {
+    if (!campaign) return;
+    campaign.applications.forEach((app) => {
+      fetchCreatorName(app.creatorId);
+    });
+  }, [campaign]);
 
   if (!campaign) {
     return (
@@ -81,13 +110,12 @@ export default function ApplicationsPage() {
       ) : (
         <div className="space-y-4">
           {campaign.applications.map((app) => (
-            <Card
-              key={app._id}
-              className="px-6 py-4 shadow border rounded-lg"
-            >
+            <Card key={app._id} className="px-6 py-4 shadow border rounded-lg">
               <div className="flex justify-between flex-wrap gap-4 items-center">
                 <div>
-                  <p className="font-semibold">Creator ID: {app.creatorId}</p>
+                  <p className="font-semibold">
+                    Creator: {creatorNames[app.creatorId] || app.creatorId}
+                  </p>
                   <p className="text-sm text-gray-500 capitalize">
                     Status: {app.status}
                   </p>
