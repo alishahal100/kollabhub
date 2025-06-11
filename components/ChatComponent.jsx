@@ -1,7 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useAPI } from "@/lib/api";
+import { useEffect, useState, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useAPI } from "@/lib/api";
+import { toast } from "sonner";
+import io from "socket.io-client";
+
+const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000");
 
 export default function ChatComponent({ receiverId, campaignId }) {
   const { user } = useUser();
@@ -10,31 +14,60 @@ export default function ChatComponent({ receiverId, campaignId }) {
   const { getMessages, sendMessage } = useAPI();
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
+  const audioRef = useRef(null);
 
+  // Join socket room
+  useEffect(() => {
+    if (senderId) {
+      socket.emit("join", { userId: senderId });
+    }
+  }, [senderId]);
+
+  // Handle incoming messages
+  useEffect(() => {
+    socket.on("receiveMessage", (message) => {
+      // Show toast
+      toast.success("New message received!");
+
+      // Play sound
+      if (audioRef.current) {
+        audioRef.current.play();
+      }
+
+      // Update chat UI if the message is relevant
+      if (
+        (message.senderId === receiverId && message.receiverId === senderId) ||
+        (message.receiverId === receiverId && message.senderId === senderId)
+      ) {
+        setMessages((prev) => [...prev, message]);
+      }
+    });
+
+    return () => {
+      socket.off("receiveMessage");
+    };
+  }, [receiverId, senderId]);
+
+  // Fetch messages
   const fetchMessages = async () => {
     if (!senderId || !receiverId) return;
-    try {
-      const data = await getMessages({ senderId, receiverId });
-      setMessages(data);
-    } catch (err) {
-      console.error("Failed to fetch messages", err);
-    }
+    const data = await getMessages({ senderId, receiverId });
+    setMessages(data);
   };
 
+  // Send message
   const handleSend = async () => {
-    if (!newMsg.trim() || !senderId) return;
-    try {
-      await sendMessage({
-        senderId,
-        receiverId,
-        content: newMsg,
-        campaignId,
-      });
-      setNewMsg("");
-      fetchMessages();
-    } catch (err) {
-      console.error("Failed to send message", err);
-    }
+    if (!newMsg.trim()) return;
+    const messageData = {
+      senderId,
+      receiverId,
+      content: newMsg,
+      campaignId,
+    };
+    await sendMessage(messageData);
+    socket.emit("sendMessage", messageData);
+    setNewMsg("");
+    fetchMessages();
   };
 
   useEffect(() => {
@@ -42,7 +75,8 @@ export default function ChatComponent({ receiverId, campaignId }) {
   }, [receiverId, senderId]);
 
   return (
-    <div className="w-full max-w-lg mx-auto bg-white border rounded p-4 mt-4 shadow">
+    <div className="relative w-full max-w-lg mx-auto bg-white border rounded p-4 mt-4 shadow">
+      <audio ref={audioRef} src="/notify.mp3" preload="auto" />
       <div className="h-64 overflow-y-auto space-y-2 mb-4 px-1">
         {messages.map((msg, i) => {
           const isSender = msg.senderId === senderId;
