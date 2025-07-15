@@ -7,6 +7,7 @@ import {
   Settings,
   Users,
   MessageCircle,
+  Link as LinkIcon,
 } from "lucide-react"
 
 import { UserButton, useUser } from "@clerk/nextjs"
@@ -50,6 +51,11 @@ export function AppSidebar() {
       icon: Megaphone,
     },
     {
+      title: "Connections",
+      url: "/user-dashboard/Connections",
+      icon: LinkIcon,
+    },
+    {
       title: "Messages",
       url: "/user-dashboard/Messages",
       icon: MessageCircle,
@@ -78,6 +84,11 @@ export function AppSidebar() {
       icon: Megaphone,
     },
     {
+      title: "Connections",
+      url: "/brand-dashboard/Connections",
+      icon: LinkIcon,
+    },
+    {
       title: "Messages",
       url: "/brand-dashboard/Messages",
       icon: MessageCircle,
@@ -99,7 +110,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
-                const isActive = pathname === item.url; // 👈 checks active link
+                const isActive = pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.title} className={isActive ? "bg-[#F57C00] text-white rounded-md" : ""}>
                     <SidebarMenuButton asChild>

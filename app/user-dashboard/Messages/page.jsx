@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useUser, useAuth } from "@clerk/nextjs";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import ChatComponent from "@/components/ChatComponent";
 import { useAPI } from "@/lib/api";
 
@@ -110,12 +110,15 @@ export default function MessagesPage() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl w-full">
+          <DialogTitle className="text-lg font-semibold">
+             Chat with{" "}
           {selectedConversation && (
             <ChatComponent
               receiverId={selectedConversation.receiverId}
               campaignId={selectedConversation.campaignId}
             />
           )}
+          </DialogTitle>
         </DialogContent>
       </Dialog>
     </div>
